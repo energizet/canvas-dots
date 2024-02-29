@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<canvas id="dots"></canvas>
+<script>
+    let canvasDots = document.querySelector('#dots');
+    let ctx = canvasDots.getContext('2d');
+
+    let width = 700;
+    let height = 700;
+    let maxDots = 100;
+    let minRadius = 3;
+    let maxRadius = 10;
+    let minSpeed = 1;
+    let maxSpeed = 3;
+    let lineSize = 100;
+
+    canvasDots.width = width;
+    canvasDots.height = height;
+
+    class Dot {
+        x;
+        y;
+        dX;
+        dY;
+        radius;
+        speed;
+        isActive = true;
+
+        constructor(x, y, dX, dY, radius, speed) {
+            this.x = x;
+            this.y = y;
+            this.dX = dX;
+            this.dY = dY;
+            this.radius = radius;
+            this.speed = speed;
+        }
+
+        next() {
+            this.x += this.dX * this.speed;
+            this.y += this.dY * this.speed;
+
+            this.isActive = this.x >= 0 && this.y >= 0 && this.x <= width && this.y <= height;
+        }
+    }
+
+    let loopDelta = 16;
+    setTimeout(function looper() {
+        loop();
+        setTimeout(looper, loopDelta);
+    }, loopDelta);
+
+    let dots = [];
+
+    function loop() {
+        dots = dots.filter(dot => dot.isActive);
+
+        if (dots.length < maxDots) {
+            dots.push(createDot());
+        }
+
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, width, height);
+
+        for (let i = 0; i < dots.length; i++) {
+            let dot = dots[i];
+
+            for (let j = i + 1; j < dots.length; j++) {
+                let closestDot = dots[j];
+
+                let xSize = dot.x - closestDot.x;
+                let ySize = dot.y - closestDot.y;
+
+                if (Math.sqrt(xSize ** 2 + ySize ** 2) < lineSize) {
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(dot.x, dot.y);
+                    ctx.lineTo(closestDot.x, closestDot.y);
+                    ctx.stroke();
+                }
+            }
+
+
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(dot.x, dot.y, dot.radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            dot.next();
+        }
+    }
+
+    function createDot() {
+        let side = Math.floor(Math.random() * 4);
+
+        let x = 0;
+        let y = 0;
+        let angel = createAngle(side);
+        if (side === 0) {//left
+            x = 0;
+            y = Math.floor(Math.random() * height);
+        } else if (side === 1) {//top
+            x = Math.floor(Math.random() * width);
+            y = 0;
+        } else if (side === 2) {//right
+            x = width;
+            y = Math.floor(Math.random() * height);
+        } else if (side === 3) {//bottom
+            x = Math.floor(Math.random() * width);
+            y = height;
+        }
+        let dX = Math.sin(Math.PI / 180 * angel);
+        let dY = Math.cos(Math.PI / 180 * angel);
+
+        let radius = Math.floor(Math.random() * (maxRadius - minRadius) + minRadius);
+        let speed = Math.floor(Math.random() * (maxSpeed - minSpeed) + minSpeed);
+
+        return new Dot(x, y, dX, dY, radius, speed);
+    }
+
+    function createAngle(side) {
+        let angle = Math.floor(Math.random() * 90);
+        if (side === 0) {//left
+            return angle - 90 + 90 + 45;
+        }
+        if (side === 1) {//top
+            return angle + 180 + 90 + 45;
+        }
+        if (side === 2) {//right
+            return angle + 90 + 90 + 45;
+        }
+        if (side === 3) {//bottom
+            return angle + 90 + 45;
+        }
+    }
+
+</script>
+</body>
+</html>
